@@ -1,4 +1,5 @@
 #include <raylib.h>
+#include <raymath.h>
 #include <iostream>
 #include "car.h"
 
@@ -26,11 +27,11 @@ int main()
     camera.projection = CAMERA_PERSPECTIVE;
 
     cout << monitor << '\n' << height << '\n' << width << '\n' << vsync;
-    
+    //block size 4 units
     car aCar;
     aCar.position = Vector3{ 0, 0, 0 };
 
-    aCar.model = LoadModel("carModelB.glb");
+    aCar.model = LoadModel("roadBlock.glb");
 
     while (!WindowShouldClose())
     {
@@ -39,7 +40,7 @@ int main()
             ToggleFullscreen();
         }
 
-        aCar.speed = 0.5 * (IsKeyDown(KEY_UP) - IsKeyDown(KEY_DOWN));
+        aCar.speed = 4 * (IsKeyPressed(KEY_UP) - IsKeyPressed(KEY_DOWN));
 
         aCar.position.x += aCar.speed;
 
@@ -48,6 +49,7 @@ int main()
         DrawFPS(50, 50);
         BeginMode3D(camera);
         DrawModel(aCar.model, aCar.position, 1.0, WHITE);
+        DrawModel(aCar.model, Vector3Zero(), 1.0, WHITE);
         EndMode3D();
         EndDrawing();
     }
