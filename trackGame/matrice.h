@@ -13,7 +13,7 @@ enum error {//errors if the operation is invalid
 	NONE
 };
 
-Vector3 rotatePointAroundAxis(Vector3 point, Vector3 axis, float angle);//might go unused
+Vector3 rotatePointAroundAxis(Vector3 point, Vector3 axis, float angle);
 
 class matrice
 {

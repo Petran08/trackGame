@@ -1,11 +1,52 @@
 #include <raylib.h>
 #include <raymath.h>
 #include <iostream>
+#include <sstream>
 #include "car.h"
 #include "trackData.h"
 #include "block.h"
 
 using namespace std;
+
+std::string blockTypes[] = { "roadBlock" };
+
+Model blockModels[10];
+
+void drawScreen(Camera3D camera, car aCar, trackData track, block temp)
+{
+    stringstream deb;
+
+    BeginDrawing();
+    ClearBackground(SKYBLUE);
+    DrawFPS(50, 50);
+    BeginMode3D(camera);
+
+
+    Matrix carRotation = {
+        aCar.forward.x, aCar.up.x,    aCar.right.x,  0,
+        aCar.forward.y, aCar.up.y,    aCar.right.y,  0,
+        aCar.forward.z, aCar.up.z,    aCar.right.z,  0,
+        0,              0,            0,              1
+    };
+
+    aCar.model.transform = carRotation;
+
+    DrawModel(aCar.model, aCar.position, 1.0f, WHITE);
+
+
+    DrawModel(blockModels[temp.blockID], temp.position, 1.0, WHITE);
+    for (auto b : track.blocks)
+    {
+        DrawModel(blockModels[b.blockID], b.position, 1.0, WHITE);
+    }
+    EndMode3D();
+
+    deb << "AngleY: " << aCar.angle.y;
+
+    DrawText(deb.str().c_str(), 50, 100, 25, BLACK);
+
+    EndDrawing();
+}
 
 int main()
 {
@@ -33,16 +74,14 @@ int main()
     car aCar;
     aCar.position = Vector3{ 0, 0, 0 };
 
+    blockModels[0] = LoadModel("roadBlock.glb");
+
     aCar.model = LoadModel("carModelB.glb");
 
     std::string trackName = "01.trk";
 
     trackData track;
     track.readTrackFile(trackName);
-
-    std::string blockTypes[] = { "roadBlock" };
-
-    Model blockModels[] = { LoadModel("roadBlock.glb") };
 
     block temp(blockTypes[0], Vector3{ 0, 0 , 0 }, 0, 0);
 
@@ -66,18 +105,8 @@ int main()
             track.blocks.push_back(temp);
         }
 
-        BeginDrawing();
-        ClearBackground(SKYBLUE);
-        DrawFPS(50, 50);
-        BeginMode3D(camera);
-        DrawModel(aCar.model, aCar.position, 1.0, WHITE);
-        DrawModel(blockModels[temp.blockID], temp.position, 1.0, WHITE);
-        for (auto b : track.blocks)
-        {
-            DrawModel(blockModels[b.blockID], b.position, 1.0, WHITE);
-        }
-        EndMode3D();
-        EndDrawing();
+        drawScreen(camera, aCar, track, temp);
+
     }
 
     track.saveTrackFile(trackName);

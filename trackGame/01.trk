@@ -120,3 +120,16 @@ roadBlock -20 0 0 0 0
 roadBlock -20 0 -4 0 0
 roadBlock -20 0 -8 0 0
 roadBlock -20 0 -12 0 0
+roadBlock 24 0 24 0 0
+roadBlock 20 0 24 0 0
+roadBlock 16 0 24 0 0
+roadBlock 12 0 24 0 0
+roadBlock 8 0 24 0 0
+roadBlock 4 0 24 0 0
+roadBlock 0 0 24 0 0
+roadBlock 0 0 24 0 0
+roadBlock -4 0 24 0 0
+roadBlock -8 0 24 0 0
+roadBlock -12 0 24 0 0
+roadBlock -20 0 24 0 0
+roadBlock -16 0 24 0 0
