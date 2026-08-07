@@ -33,15 +33,17 @@ void drawScreen(Camera3D camera, car aCar, trackData track, block temp)
 
     DrawModel(aCar.model, aCar.position, 1.0f, WHITE);
 
+    DrawModel(blockModels[temp.blockID], Vector3Add(temp.position, Vector3{ 0.0f, 0.001f, 0.0f }), 1.0, Color{ 255, 255, 255, 100 });
 
-    DrawModel(blockModels[temp.blockID], temp.position, 1.0, WHITE);
     for (auto b : track.blocks)
     {
         DrawModel(blockModels[b.blockID], b.position, 1.0, WHITE);
     }
+
     EndMode3D();
 
     deb << "AngleY: " << aCar.angle.y;
+    deb << "\nSpeed: " << aCar.speed;
 
     DrawText(deb.str().c_str(), 50, 100, 25, BLACK);
 
