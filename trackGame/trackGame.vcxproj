@@ -137,6 +137,9 @@
     <ClInclude Include="car.h" />
     <ClInclude Include="trackData.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="01.trk" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

@@ -39,4 +39,7 @@
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="01.trk" />
+  </ItemGroup>
 </Project>
