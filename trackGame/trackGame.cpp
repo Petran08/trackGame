@@ -31,19 +31,30 @@ void drawScreen(Camera3D camera, car aCar, trackData track, block temp)
 
     aCar.model.transform = carRotation;
 
+    for(auto s : aCar.collisionSpheres)
+    {
+        DrawSphere(s.center, s.radius, GREEN);
+    }
+    
     DrawModel(aCar.model, aCar.position, 1.0f, WHITE);
 
-    DrawModel(blockModels[temp.blockID], Vector3Add(temp.position, Vector3{ 0.0f, 0.001f, 0.0f }), 1.0, Color{ 255, 255, 255, 100 });
+    DrawModel(blockModels[temp.blockID], Vector3Add(temp.position, Vector3{ 0.0f, 0.001f, 0.0f }), 1.0f, Color{ 255, 255, 255, 100 });
 
     for (auto b : track.blocks)
     {
-        DrawModel(blockModels[b.blockID], b.position, 1.0, WHITE);
+        DrawModel(blockModels[b.blockID], b.position, 1.0f, WHITE);
     }
 
     EndMode3D();
 
     deb << "AngleY: " << aCar.angle.y;
+    deb << "\noldAngleY" << aCar.oldAngle.y;
     deb << "\nSpeed: " << aCar.speed;
+    deb << "\nSphere1 center: " << aCar.collisionSpheres[0].center.x << ' ' << aCar.collisionSpheres[0].center.y << ' ' << aCar.collisionSpheres[0].center.z;
+    deb << "\nSphere1 localCenter: " << aCar.collisionSpheres[0].localCenter.x << ' ' << aCar.collisionSpheres[0].localCenter.y << ' ' << aCar.collisionSpheres[0].localCenter.z;
+    deb << "\nUp: " << aCar.up.x << ' ' << aCar.up.y << ' ' << aCar.up.z;
+    deb << "\nright: " << aCar.right.x << ' ' << aCar.right.y << ' ' << aCar.right.z;
+    deb << "\nforward: " << aCar.forward.x << ' ' << aCar.forward.y << ' ' << aCar.forward.z;
 
     DrawText(deb.str().c_str(), 50, 100, 25, BLACK);
 
@@ -61,6 +72,7 @@ int main()
 
     SetWindowSize(width, height);
     SetTargetFPS(vsync+1);
+    //SetTargetFPS(2);
     SetWindowPosition(0, 0);
     ToggleFullscreen();
 
