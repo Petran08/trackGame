@@ -16,7 +16,7 @@ public:
 	Vector3 position = Vector3Zero();
 	Vector3 angle = Vector3Zero(), oldAngle = Vector3Zero();
 	Vector3 up = { 0.0f, 1.0f, 0.0f }, right = { 0.0f, 0.0f, 1.0f }, forward = {1.0f, 0.0f, 0.0f};
-	float speed = 0;
+	double speed = 0;
 	short int gear = 1;
 	float rpm = 0;
 	float deceleration = 0;
@@ -97,8 +97,15 @@ public:
 
 		oldAngle = angle;
 
-		if (speed != 0)
+		if (speed == 0)
+			speed = 1e-5;
+
+		if (speed == 1e-5)
+		{
+			angle.x -= speed / abs(speed) * DEG2RAD * 0.5 * (-IsKeyDown(KEY_H) + IsKeyDown(KEY_F));
 			angle.y += speed / abs(speed) * DEG2RAD * 0.5 * (-IsKeyDown(KEY_RIGHT) + IsKeyDown(KEY_LEFT));
+			angle.z += speed / abs(speed) * DEG2RAD * 0.5 * (-IsKeyDown(KEY_T) + IsKeyDown(KEY_G));
+		}
 
 		newCarAxisUpdate();
 
