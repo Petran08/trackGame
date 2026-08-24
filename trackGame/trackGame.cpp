@@ -38,7 +38,7 @@ void drawScreen(Camera3D camera, car aCar, trackData track, block temp)
     
     DrawModel(aCar.model, aCar.position, 1.0f, WHITE);
 
-    DrawModel(blockModels[temp.blockID], Vector3Add(temp.position, Vector3{ 0.0f, 0.001f, 0.0f }), 1.0f, Color{ 255, 255, 255, 100 });
+    DrawModel(blockModels[temp.blockID], Vector3Add(temp.position, Vector3{ 0.0f, 0.01f, 0.0f }), 1.0f, Color{ 255, 255, 255, 100 });
 
     for (auto b : track.blocks)
     {
@@ -71,7 +71,8 @@ int main()
     int vsync = GetMonitorRefreshRate(monitor);
 
     SetWindowSize(width, height);
-    SetTargetFPS(vsync+1);
+    //SetTargetFPS(vsync);
+    SetTargetFPS(100);
     //SetTargetFPS(2);
     SetWindowPosition(0, 0);
     ToggleFullscreen();
@@ -86,7 +87,6 @@ int main()
     cout << monitor << '\n' << height << '\n' << width << '\n' << vsync;
     //block size 4 units
     car aCar;
-    aCar.position = Vector3{ 0, 0, 0 };
 
     blockModels[0] = LoadModel("roadBlock.glb");
 

@@ -3,6 +3,7 @@
 #include <cmath>
 #include <raymath.h>
 #include "matrice.h"
+#include "trackData.h"
 #include <vector>
 
 struct Sphere {
@@ -13,7 +14,7 @@ struct Sphere {
 class car
 {
 public:
-	Vector3 position = Vector3Zero();
+	Vector3 position = Vector3{ 0.0f, 4.0f, 0.0f};
 	Vector3 angle = Vector3Zero(), oldAngle = Vector3Zero();
 	Vector3 up = { 0.0f, 1.0f, 0.0f }, right = { 0.0f, 0.0f, 1.0f }, forward = {1.0f, 0.0f, 0.0f};
 	double speed = 0;
@@ -54,30 +55,6 @@ public:
 		}
 	}
 
-	void carAxisUpdate()
-	{
-		up = Vector3Normalize(up);
-
-		Vector3 forwardRef = { 1.0, 0.0, 0.0 };
-		if (fabsf(Vector3DotProduct(up, forwardRef)) > 0.99f)//if up is almost on the x-axis
-		{
-			if (up.x > 0.0f)
-			{
-				forwardRef = { 0.0f, -1.0f, 0.0f };//change the forward reference
-			}
-			else if (up.x < 0.0f)
-			{
-				forwardRef = { 0.0f, 1.0f, 0.0f };//change the forward reference
-			}
-		}
-
-		right = Vector3Normalize(Vector3CrossProduct(forwardRef, up));
-		forward = Vector3Normalize(Vector3CrossProduct(up, right));
-
-		forward = Vector3RotateByAxisAngle(forward, up, angle.y);
-		right = Vector3RotateByAxisAngle(right, up, angle.y);
-	}
-
 	void newCarAxisUpdate() 
 	{
 		//y
@@ -91,6 +68,19 @@ public:
 		right = Vector3RotateByAxisAngle(right, forward, angle.x - oldAngle.x);
 	}
 	
+	void collisionCheck(trackData track, short int sphereId)
+	{
+		for (auto b : track.blocks)
+		{
+			if (Vector3Distance(collisionSpheres[sphereId].center, b.position) <= (b.size + 0.5))
+			{
+				bool hit;
+				//collision check
+				//calc angles to match the normal with a axis 
+			}
+		}
+	}
+
 	void updatePhysics(Camera& camera)
 	{
 		speed = 0.1 * 1 * (IsKeyDown(KEY_UP) - IsKeyDown(KEY_DOWN));
@@ -100,7 +90,7 @@ public:
 		if (speed == 0)
 			speed = 1e-5;
 
-		if (speed == 1e-5)
+		if (speed != 1e-5)
 		{
 			angle.x -= speed / abs(speed) * DEG2RAD * 0.5 * (-IsKeyDown(KEY_H) + IsKeyDown(KEY_F));
 			angle.y += speed / abs(speed) * DEG2RAD * 0.5 * (-IsKeyDown(KEY_RIGHT) + IsKeyDown(KEY_LEFT));

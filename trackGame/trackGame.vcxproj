@@ -129,12 +129,14 @@
   <ItemGroup>
     <ClCompile Include="block.cpp" />
     <ClCompile Include="car.cpp" />
+    <ClCompile Include="physics.cpp" />
     <ClCompile Include="trackData.cpp" />
     <ClCompile Include="trackGame.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="block.h" />
     <ClInclude Include="car.h" />
+    <ClInclude Include="physics.h" />
     <ClInclude Include="trackData.h" />
   </ItemGroup>
   <ItemGroup>
