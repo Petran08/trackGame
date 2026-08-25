@@ -1,8 +1,10 @@
 #pragma once
 #include <raylib.h>
 #include <cmath>
+#include <cstdlib>
 #include <raymath.h>
 #include "matrice.h"
+#include "physics.h"
 #include "trackData.h"
 #include <vector>
 
@@ -14,7 +16,7 @@ struct Sphere {
 class car
 {
 public:
-	Vector3 position = Vector3{ 0.0f, 4.0f, 0.0f};
+	Vector3 position = Vector3{ 0.0f, 3.0f, 0.0f};
 	Vector3 angle = Vector3Zero(), oldAngle = Vector3Zero();
 	Vector3 up = { 0.0f, 1.0f, 0.0f }, right = { 0.0f, 0.0f, 1.0f }, forward = {1.0f, 0.0f, 0.0f};
 	double speed = 0;
@@ -68,20 +70,30 @@ public:
 		right = Vector3RotateByAxisAngle(right, forward, angle.x - oldAngle.x);
 	}
 	
-	void collisionCheck(trackData track, short int sphereId)
+	bool collisionCheck(trackData track, short int sphereId, Vector3& normal, float& pushDist)
 	{
+		Sphere sp = collisionSpheres[sphereId];
 		for (auto b : track.blocks)
 		{
-			if (Vector3Distance(collisionSpheres[sphereId].center, b.position) <= (b.size + 0.5))
+			if (Vector3DistanceSqr(sp.center, b.position) <= (b.size + 0.5) * (b.size + 0.5))
 			{
-				bool hit;
-				//collision check
-				//calc angles to match the normal with a axis 
+
+				Matrix transform = MatrixTranslate(b.position.x, b.position.y, b.position.z);
+
+				bool hit = CheckCollisionSphereMesh(sp.center, sp.radius, b.blockModel.meshes[0], transform, normal, pushDist);
+
+				if (hit)
+				{
+					return true;
+					//std::cout << "wheel " << sphereId << " hit with block at : " << b.position.x << ' ' << b.position.y << ' ' << b.position.z << '\n';
+					//std::cout << "normal: " << normal.x << ' ' << normal.y << ' ' << normal.z << '\n';
+				} 
 			}
 		}
+		return false;
 	}
 
-	void updatePhysics(Camera& camera)
+	void updatePhysics(Camera& camera, trackData track)
 	{
 		speed = 0.1 * 1 * (IsKeyDown(KEY_UP) - IsKeyDown(KEY_DOWN));
 
@@ -100,6 +112,34 @@ public:
 		newCarAxisUpdate();
 
 		position = Vector3Add(position, Vector3Scale(forward, speed));
+
+		position = Vector3Add(position, { 0.0f, -0.1f, 0.0f });//hard coded gravity for now, will update when organizing the code
+		
+		Vector3 normal = up, averageNormal = Vector3Zero();
+		float spheresTouch = 0;
+		float maxPushDist = 0;
+
+		for(int i = 0; i<collisionSpheres.size(); i++)
+		{
+			float pushDist;
+			if(collisionCheck(track, i, normal, pushDist))
+			{
+				averageNormal = Vector3Add(averageNormal, normal);
+				spheresTouch++;
+				if (pushDist > maxPushDist)
+					maxPushDist = pushDist;
+				std::cout << "normal: " << normal.x << ' ' << normal.y << ' ' << normal.z << " wheel: " << i << '\n';
+			}
+		}
+		if (spheresTouch != 0)
+			averageNormal = Vector3{ averageNormal.x / spheresTouch, averageNormal.y / spheresTouch , averageNormal.z / spheresTouch };
+		else
+			averageNormal = up;
+
+		std::cout << "averageNormal: " << averageNormal.x << ' ' << averageNormal.y << ' ' << averageNormal.z << '\n';
+
+		position = Vector3Add(position, Vector3Scale(averageNormal, maxPushDist));
+
 		updateCollisionSpheresPos();
 
 		camera.target = position;

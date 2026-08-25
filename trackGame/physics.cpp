@@ -1,8 +1,9 @@
 #include "physics.h"
+#include <iostream>
 #include <raylib.h>
 #include <raymath.h>
 
-bool CheckCollisionSphereMesh(Vector3 center, float radius, Mesh mesh, Matrix transform, Vector3& normals)
+bool CheckCollisionSphereMesh(Vector3 center, float radius, Mesh mesh, Matrix transform, Vector3& normals, float& pushDist)
 {
 	bool collided = false;
 
@@ -12,6 +13,7 @@ bool CheckCollisionSphereMesh(Vector3 center, float radius, Mesh mesh, Matrix tr
 	col.position = center;
 
 	float minAngle = 180 * DEG2RAD;//to see which normal should be the one that pushes u back
+	float maxAlignment = 0;
 
 	if (mesh.indices != NULL)//if the mesh uses the indices array
 	{
@@ -24,20 +26,33 @@ bool CheckCollisionSphereMesh(Vector3 center, float radius, Mesh mesh, Matrix tr
 			Vector3 b = { mesh.vertices[i1 * 3 + 0], mesh.vertices[i1 * 3 + 1], mesh.vertices[i1 * 3 + 2] };
 			Vector3 c = { mesh.vertices[i2 * 3 + 0], mesh.vertices[i2 * 3 + 1], mesh.vertices[i2 * 3 + 2] };
 
+			a = Vector3Transform(a, transform);
+			b = Vector3Transform(b, transform);
+			c = Vector3Transform(c, transform);
+
 			if (checkCollisionSphereTriangle(center, radius, a, b, c, closestPoint))//check collision
 			{
 				collided = true;//collided
 				col.direction = Vector3Normalize(Vector3Subtract(closestPoint, center));//have the direction to the closest point(normalized)
 				Vector3 normal = triangleNormal(a, b, c);//take the normal
-				if (VectorsFaceSameDirection(Vector3Subtract(Vector3Zero(), col.direction), normal, 91.0f))//if they face the same direction(aprox)
+				
+				Vector3 pushDirection = Vector3Subtract(
+					Vector3Zero(),
+					col.direction
+				);
+				// Make the normal point in the push direction
+				if (Vector3DotProduct(normal, pushDirection) < 0.0f)
 				{
-					if (Vector3Angle(Vector3Subtract(Vector3Zero(), col.direction), normal) < minAngle)//if the normal it`s the closest one to the collison directio 
-						normals = normal, minAngle = Vector3Angle(Vector3Subtract(Vector3Zero(), col.direction), normal);//replace it
+					normal = Vector3Subtract(Vector3Zero(), normal);
 				}
-				else//if they face opposite direction
+
+				// Keep the normal most aligned with the push direction
+				float alignment = Vector3DotProduct(normal, pushDirection);
+
+				if (alignment > maxAlignment)
 				{
-					if (Vector3Angle(Vector3Subtract(Vector3Zero(), col.direction), Vector3Subtract(Vector3Zero(), normal)) < minAngle)//if the angle with the opposite is minimal
-						normals = Vector3Subtract(Vector3Zero(), normal), minAngle = Vector3Angle(Vector3Subtract(Vector3Zero(), col.direction), normal);//use the opposite normal
+					normals = normal;
+					maxAlignment = alignment;
 				}
 			}
 		}
@@ -51,25 +66,39 @@ bool CheckCollisionSphereMesh(Vector3 center, float radius, Mesh mesh, Matrix tr
 			Vector3 b = { mesh.vertices[base + 3], mesh.vertices[base + 4], mesh.vertices[base + 5] };//but the vertices are calculated slightly different
 			Vector3 c = { mesh.vertices[base + 6], mesh.vertices[base + 7], mesh.vertices[base + 8] };
 
+
+
 			if (checkCollisionSphereTriangle(center, radius, a, b, c, closestPoint))
 			{
 				collided = true;
 				col.direction = Vector3Normalize(Vector3Subtract(closestPoint, center));
 				Vector3 normal = triangleNormal(a, b, c);
-				if (VectorsFaceSameDirection(Vector3Subtract(Vector3Zero(), col.direction), normal, 91.0f))
+				
+				Vector3 pushDirection = Vector3Subtract(
+					Vector3Zero(),
+					col.direction
+				);
+
+				// Make the normal point in the push direction
+				if (Vector3DotProduct(normal, pushDirection) < 0.0f)
 				{
-					if (Vector3Angle(Vector3Subtract(Vector3Zero(), col.direction), normal) < minAngle)
-						normals = normal, minAngle = Vector3Angle(Vector3Subtract(Vector3Zero(), col.direction), normal);
+					normal = Vector3Subtract(Vector3Zero(), normal);
 				}
-				else
+
+				// Keep the normal most aligned with the push direction
+				float alignment = Vector3DotProduct(normal, pushDirection);
+
+				if (alignment > maxAlignment)
 				{
-					if (Vector3Angle(Vector3Subtract(Vector3Zero(), col.direction), Vector3Subtract(Vector3Zero(), normal)) < minAngle)
-						normals = Vector3Subtract(Vector3Zero(), normal), minAngle = Vector3Angle(Vector3Subtract(Vector3Zero(), col.direction), normal);
+					normals = normal;
+					maxAlignment = alignment;
 				}
 			}
 		}
 
 	}
+
+	pushDist = radius - Vector3Distance(center, closestPoint) + 0.1f;
 
 	return collided;//return if collided
 }

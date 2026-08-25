@@ -18,7 +18,6 @@ void drawScreen(Camera3D camera, car aCar, trackData track, block temp)
 
     BeginDrawing();
     ClearBackground(SKYBLUE);
-    DrawFPS(50, 50);
     BeginMode3D(camera);
 
 
@@ -57,6 +56,7 @@ void drawScreen(Camera3D camera, car aCar, trackData track, block temp)
     deb << "\nforward: " << aCar.forward.x << ' ' << aCar.forward.y << ' ' << aCar.forward.z;
 
     DrawText(deb.str().c_str(), 50, 100, 25, BLACK);
+    DrawFPS(50, 50);
 
     EndDrawing();
 }
@@ -95,9 +95,9 @@ int main()
     std::string trackName = "01.trk";
 
     trackData track;
-    track.readTrackFile(trackName);
+    track.readTrackFile(trackName, blockModels);
 
-    block temp(blockTypes[0], Vector3{ 0, 0 , 0 }, 0, 0);
+    block temp(blockTypes[0], Vector3{ 0, 0 , 0 }, 0, 0, blockModels[0]);
 
     while (!WindowShouldClose())
     {
@@ -106,7 +106,7 @@ int main()
             ToggleFullscreen();
         }
 
-        aCar.updatePhysics(camera);
+        aCar.updatePhysics(camera, track);
         
         int xMove = 4 * (IsKeyPressed(KEY_W) - IsKeyPressed(KEY_S));
         int zMove = 4 * (IsKeyPressed(KEY_D) - IsKeyPressed(KEY_A));

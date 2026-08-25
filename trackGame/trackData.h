@@ -9,7 +9,7 @@ class trackData
 public:
 	std::vector<block> blocks;
 
-	void readTrackFile(std::string fileName)
+	void readTrackFile(std::string fileName, Model modelList[10])
 	{
 		std::string nm;
 		int rot, id;
@@ -18,7 +18,7 @@ public:
 		while (in >> nm)
 		{
 			in >> x >> y >> z >> rot >> id;
-			block temp(nm, Vector3{x, y, z}, rot, id);
+			block temp(nm, Vector3{x, y, z}, rot, id, modelList[id]);
 			blocks.push_back(temp);
 		}
 	}
