@@ -8,7 +8,7 @@
 
 using namespace std;
 
-std::string blockTypes[] = { "roadBlock" };
+std::string blockTypes[] = { "roadBlock", "roadBlockS"};
 
 Model blockModels[10];
 
@@ -89,6 +89,8 @@ int main()
     car aCar;
 
     blockModels[0] = LoadModel("roadBlock.glb");
+    blockModels[1] = LoadModel("roadBlockS.glb");
+
 
     aCar.model = LoadModel("carModelB.glb");
 
@@ -97,7 +99,9 @@ int main()
     trackData track;
     track.readTrackFile(trackName, blockModels);
 
-    block temp(blockTypes[0], Vector3{ 0, 0 , 0 }, 0, 0, blockModels[0]);
+    int blockId = 1;
+
+    block temp(blockTypes[blockId], Vector3{ 0, 0 , 0 }, 0, blockId, blockModels[blockId]);
 
     while (!WindowShouldClose())
     {

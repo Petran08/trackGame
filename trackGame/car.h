@@ -128,7 +128,7 @@ public:
 		Vector3 normal = up, averageNormal = Vector3Zero();
 		float spheresTouch = 0;
 		float maxPushDist = 0;
-
+		//improve the block loading and storing(use a 3d vector and simplify the block class if possible)
 		for(int i = 0; i<collisionSpheres.size(); i++)
 		{
 			float pushDist;

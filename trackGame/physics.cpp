@@ -15,6 +15,7 @@ bool CheckCollisionSphereMesh(Vector3 center, float radius, Vector3 carPos,  Mes
 
 	float minAngle = 180 * DEG2RAD;//to see which normal should be the one that pushes u back
 	float maxAlignment = 0;
+	float maxHeight = -1000.0f;
 
 	if (mesh.indices != NULL)//if the mesh uses the indices array
 	{
@@ -48,12 +49,12 @@ bool CheckCollisionSphereMesh(Vector3 center, float radius, Vector3 carPos,  Mes
 				}
 
 				// keep the normal most aligned with the push direction
-				float alignment = Vector3DotProduct(normal, pushDirection);
-
-				if (alignment > maxAlignment)
+				//float alignment = Vector3DotProduct(normal, pushDirection);
+				float triangleHeight = (a.y + b.y, +c.y) / 3;
+				if (triangleHeight > maxHeight)
 				{
 					normals = normal;
-					maxAlignment = alignment;
+					maxHeight = triangleHeight;
 					pushDist = abs(radius - Vector3Distance(center, closestPoint));
 				}
 			}
@@ -88,12 +89,11 @@ bool CheckCollisionSphereMesh(Vector3 center, float radius, Vector3 carPos,  Mes
 				}
 
 				// keep the normal most aligned with the push direction
-				float alignment = Vector3DotProduct(normal, pushDirection);
-
-				if (alignment > maxAlignment)
+				float triangleHeight = (a.y + b.y, +c.y) / 3;
+				if (triangleHeight > maxHeight)
 				{
 					normals = normal;
-					maxAlignment = alignment;
+					maxHeight = triangleHeight;
 					pushDist = abs(radius - Vector3Distance(center, closestPoint));
 				}
 			}
