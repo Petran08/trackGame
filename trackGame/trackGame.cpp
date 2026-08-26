@@ -73,7 +73,7 @@ int main()
     SetWindowSize(width, height);
     //SetTargetFPS(vsync);
     SetTargetFPS(100);
-    //SetTargetFPS(2);
+    //SetTargetFPS(5);
     SetWindowPosition(0, 0);
     ToggleFullscreen();
 

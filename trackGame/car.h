@@ -72,25 +72,35 @@ public:
 	
 	bool collisionCheck(trackData track, short int sphereId, Vector3& normal, float& pushDist)
 	{
+		bool collided = false;
+		float dist = 10000.0f, pushDistT;
+		Vector3 normalT = up;
 		Sphere sp = collisionSpheres[sphereId];
 		for (auto b : track.blocks)
 		{
 			if (Vector3DistanceSqr(sp.center, b.position) <= (b.size + 0.5) * (b.size + 0.5))
 			{
+				float distToBlock = Vector3DistanceSqr(position, b.position);
 
 				Matrix transform = MatrixTranslate(b.position.x, b.position.y, b.position.z);
 
-				bool hit = CheckCollisionSphereMesh(sp.center, sp.radius, b.blockModel.meshes[0], transform, normal, pushDist);
+				bool hit = CheckCollisionSphereMesh(sp.center, sp.radius, position, b.blockModel.meshes[0], transform, normalT, pushDistT);
 
 				if (hit)
 				{
-					return true;
+					collided = true;
+					if (distToBlock < dist)
+					{
+						dist = distToBlock;
+						normal = normalT;
+						pushDist = pushDistT;
+					}
 					//std::cout << "wheel " << sphereId << " hit with block at : " << b.position.x << ' ' << b.position.y << ' ' << b.position.z << '\n';
 					//std::cout << "normal: " << normal.x << ' ' << normal.y << ' ' << normal.z << '\n';
 				} 
 			}
 		}
-		return false;
+		return collided;
 	}
 
 	void updatePhysics(Camera& camera, trackData track)
@@ -100,9 +110,9 @@ public:
 		oldAngle = angle;
 
 		if (speed == 0)
-			speed = 1e-5;
+			speed = 1e-10;
 
-		if (speed != 1e-5)
+		if (speed != 1e-10)
 		{
 			angle.x -= speed / abs(speed) * DEG2RAD * 0.5 * (-IsKeyDown(KEY_H) + IsKeyDown(KEY_F));
 			angle.y += speed / abs(speed) * DEG2RAD * 0.5 * (-IsKeyDown(KEY_RIGHT) + IsKeyDown(KEY_LEFT));
@@ -137,6 +147,7 @@ public:
 			averageNormal = up;
 
 		std::cout << "averageNormal: " << averageNormal.x << ' ' << averageNormal.y << ' ' << averageNormal.z << '\n';
+		std::cout << "pushDist: " << maxPushDist << "\n\n";
 
 		position = Vector3Add(position, Vector3Scale(averageNormal, maxPushDist));
 

@@ -1,9 +1,10 @@
 #include "physics.h"
+#include <cmath>
 #include <iostream>
 #include <raylib.h>
 #include <raymath.h>
 
-bool CheckCollisionSphereMesh(Vector3 center, float radius, Mesh mesh, Matrix transform, Vector3& normals, float& pushDist)
+bool CheckCollisionSphereMesh(Vector3 center, float radius, Vector3 carPos,  Mesh mesh, Matrix transform, Vector3& normals, float& pushDist)
 {
 	bool collided = false;
 
@@ -40,19 +41,20 @@ bool CheckCollisionSphereMesh(Vector3 center, float radius, Mesh mesh, Matrix tr
 					Vector3Zero(),
 					col.direction
 				);
-				// Make the normal point in the push direction
+				// make the normal point in the push direction
 				if (Vector3DotProduct(normal, pushDirection) < 0.0f)
 				{
 					normal = Vector3Subtract(Vector3Zero(), normal);
 				}
 
-				// Keep the normal most aligned with the push direction
+				// keep the normal most aligned with the push direction
 				float alignment = Vector3DotProduct(normal, pushDirection);
 
 				if (alignment > maxAlignment)
 				{
 					normals = normal;
 					maxAlignment = alignment;
+					pushDist = abs(radius - Vector3Distance(center, closestPoint));
 				}
 			}
 		}
@@ -79,26 +81,25 @@ bool CheckCollisionSphereMesh(Vector3 center, float radius, Mesh mesh, Matrix tr
 					col.direction
 				);
 
-				// Make the normal point in the push direction
+				// make the normal point in the push direction
 				if (Vector3DotProduct(normal, pushDirection) < 0.0f)
 				{
 					normal = Vector3Subtract(Vector3Zero(), normal);
 				}
 
-				// Keep the normal most aligned with the push direction
+				// keep the normal most aligned with the push direction
 				float alignment = Vector3DotProduct(normal, pushDirection);
 
 				if (alignment > maxAlignment)
 				{
 					normals = normal;
 					maxAlignment = alignment;
+					pushDist = abs(radius - Vector3Distance(center, closestPoint));
 				}
 			}
 		}
 
 	}
-
-	pushDist = radius - Vector3Distance(center, closestPoint) + 0.1f;
 
 	return collided;//return if collided
 }
