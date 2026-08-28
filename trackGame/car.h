@@ -19,6 +19,9 @@ public:
 	Vector3 position = Vector3{ 0.0f, 3.0f, 0.0f};
 	Vector3 angle = Vector3Zero(), oldAngle = Vector3Zero();
 	Vector3 up = { 0.0f, 1.0f, 0.0f }, right = { 0.0f, 0.0f, 1.0f }, forward = {1.0f, 0.0f, 0.0f};
+	Vector3 targetNormal = Vector3Zero();
+	int bumpFrames = 0;
+	Vector3 angleMovement = Vector3Zero();//for the bump
 	double speed = 0;
 	short int gear = 1;
 	float rpm = 0;
@@ -103,36 +106,17 @@ public:
 		return collided;
 	}
 
-	void updatePhysics(Camera& camera, trackData track)
+	void updateCollision(trackData track)
 	{
-		speed = 0.1 * 1 * (IsKeyDown(KEY_UP) - IsKeyDown(KEY_DOWN));
-
-		oldAngle = angle;
-
-		if (speed == 0)
-			speed = 1e-10;
-
-		if (speed != 1e-10)
-		{
-			angle.x -= speed / abs(speed) * DEG2RAD * 0.5 * (-IsKeyDown(KEY_H) + IsKeyDown(KEY_F));
-			angle.y += speed / abs(speed) * DEG2RAD * 0.5 * (-IsKeyDown(KEY_RIGHT) + IsKeyDown(KEY_LEFT));
-			angle.z += speed / abs(speed) * DEG2RAD * 0.5 * (-IsKeyDown(KEY_T) + IsKeyDown(KEY_G));
-		}
-
-		newCarAxisUpdate();
-
-		position = Vector3Add(position, Vector3Scale(forward, speed));
-
-		position = Vector3Add(position, { 0.0f, -0.1f, 0.0f });//hard coded gravity for now, will update when organizing the code
-		
 		Vector3 normal = up, averageNormal = Vector3Zero();
 		float spheresTouch = 0;
 		float maxPushDist = 0;
 		//improve the block loading and storing(use a 3d vector and simplify the block class if possible)
-		for(int i = 0; i<collisionSpheres.size(); i++)
+
+		for (int i = 0; i < collisionSpheres.size(); i++)
 		{
 			float pushDist;
-			if(collisionCheck(track, i, normal, pushDist))
+			if (collisionCheck(track, i, normal, pushDist))
 			{
 				averageNormal = Vector3Add(averageNormal, normal);
 				spheresTouch++;
@@ -150,6 +134,80 @@ public:
 		std::cout << "pushDist: " << maxPushDist << "\n\n";
 
 		position = Vector3Add(position, Vector3Scale(averageNormal, maxPushDist));
+
+		//moving the car so up becomes averageNormal
+
+		if (bumpFrames == 0 && Vector3Angle(up, averageNormal) > 0.01f)
+		{
+			bumpFrames = 20;//16 to match, 4 to overshoot a little
+			targetNormal = averageNormal;
+
+			//calculate the angles i need to apply to the car
+
+			if (true)//hitting a floor
+			{
+				Vector3 forwardProjection = ProjectVectorOntoPlane(targetNormal, right);
+
+				angleMovement.z = (SignedAngle(up, forwardProjection, right)) / 16.0f;
+
+				angleMovement.z *= -1;
+
+				Vector3 rightProjection = ProjectVectorOntoPlane(targetNormal, forward);
+
+				angleMovement.x = (SignedAngle(up, rightProjection, forward)) / 16.0f;
+
+				angleMovement.x *= -1;
+				
+				angleMovement.y = 0.0f;
+			}
+			else if (false)//hitting a wall(add distinction between right forward ant their opposites)
+			{
+
+			}
+			else if (false)//hitting a roof
+			{
+
+			}
+
+		}
+
+		if (bumpFrames > 0)
+		{
+			bumpFrames--;
+			angle = Vector3Subtract(angle, angleMovement);
+		}
+		
+	}
+
+	void updatePhysics(Camera& camera, trackData track)
+	{
+		speed = 0.1 * 1 * (IsKeyDown(KEY_UP) - IsKeyDown(KEY_DOWN));
+
+		oldAngle = angle;
+
+		if (speed == 0)
+			speed = 1e-10;
+
+		if (speed != 1e-10)
+		{
+			angle.y += speed / abs(speed) * DEG2RAD * 0.5 * (-IsKeyDown(KEY_RIGHT) + IsKeyDown(KEY_LEFT));
+		}
+		else
+		{
+			angle.x -= speed / abs(speed) * DEG2RAD * 0.5 * (-IsKeyDown(KEY_H) + IsKeyDown(KEY_F));
+			angle.z += speed / abs(speed) * DEG2RAD * 0.5 * (-IsKeyDown(KEY_T) + IsKeyDown(KEY_G));
+		}
+
+		position = Vector3Add(position, Vector3Scale(forward, speed));
+
+		position = Vector3Add(position, { 0.0f, -0.1f, 0.0f });//hard coded gravity for now, will update when organizing the code
+
+		if (IsKeyPressed(KEY_SPACE))
+			position = Vector3Add(position, Vector3{ 0.0f, 2.3f, 0.0f });
+		
+		updateCollision(track);
+
+		newCarAxisUpdate();
 
 		updateCollisionSpheresPos();
 

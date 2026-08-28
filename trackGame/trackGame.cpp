@@ -46,8 +46,9 @@ void drawScreen(Camera3D camera, car aCar, trackData track, block temp)
 
     EndMode3D();
 
-    deb << "AngleY: " << aCar.angle.y;
-    deb << "\noldAngleY: " << aCar.oldAngle.y;
+    deb << "Angle: " << aCar.angle.x << " " << aCar.angle.y << " " << aCar.angle.z;
+    deb << "\noldAngle: " << aCar.oldAngle.x << " " << aCar.oldAngle.y << " " << aCar.oldAngle.z;
+    deb << "\nAngleMovement: " << aCar.angleMovement.x << " " << aCar.angleMovement.y << " " << aCar.angleMovement.z;
     deb << "\nSpeed: " << aCar.speed;
     deb << "\nSphere1 center: " << aCar.collisionSpheres[0].center.x << ' ' << aCar.collisionSpheres[0].center.y << ' ' << aCar.collisionSpheres[0].center.z;
     deb << "\nSphere1 localCenter: " << aCar.collisionSpheres[0].localCenter.x << ' ' << aCar.collisionSpheres[0].localCenter.y << ' ' << aCar.collisionSpheres[0].localCenter.z;

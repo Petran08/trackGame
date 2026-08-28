@@ -183,3 +183,23 @@ bool VectorsFaceSameDirection(Vector3 a, Vector3 b, float maxAngleDeg)//verify i
 	float threshold = cosf(DEG2RAD * maxAngleDeg);
 	return dot > threshold;
 }
+
+Vector3 ProjectVectorOntoPlane(Vector3 v, Vector3 normal)
+{
+	normal = Vector3Normalize(normal);
+
+	float dot = Vector3DotProduct(v, normal);
+
+	return Vector3Subtract(v, Vector3Scale(normal, dot));
+}
+
+float SignedAngle(Vector3 a, Vector3 b, Vector3 axis)
+{
+	float angle = Vector3Angle(a, b);
+
+	Vector3 cross = Vector3CrossProduct(a, b);
+
+	float sign = Vector3DotProduct(cross, axis) >= 0.0f ? 1.0f : -1.0f;
+
+	return angle * sign;
+}
