@@ -47,7 +47,7 @@ public:
 		collisionSpheres.push_back(temp);
 	}
 	
-	void updateCollisionSpheresPos()
+	/*void updateCollisionSpheresPos()
 	{
 		for (auto& s : collisionSpheres)
 		{
@@ -57,6 +57,20 @@ public:
 			s.localCenter = Vector3RotateByAxisAngle(s.localCenter, forward, angle.x - oldAngle.x);
 
 			s.center = Vector3Add(position, s.localCenter);
+		}
+	}*/
+
+	void updateCollisionSpheresPos()
+	{
+		for (auto& s : collisionSpheres)
+		{
+			Vector3 offset = Vector3Zero();
+
+			offset = Vector3Add(offset, Vector3Scale(forward, s.localCenter.x));
+			offset = Vector3Add(offset, Vector3Scale(up, s.localCenter.y));
+			offset = Vector3Add(offset, Vector3Scale(right, s.localCenter.z));
+
+			s.center = Vector3Add(position, offset);
 		}
 	}
 
