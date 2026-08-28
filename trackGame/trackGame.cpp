@@ -113,8 +113,8 @@ int main()
 
         aCar.updatePhysics(camera, track);
         
-        int xMove = 4 * (IsKeyPressed(KEY_W) - IsKeyPressed(KEY_S));
-        int zMove = 4 * (IsKeyPressed(KEY_D) - IsKeyPressed(KEY_A));
+        int xMove = 10 * (IsKeyPressed(KEY_W) - IsKeyPressed(KEY_S));
+        int zMove = 10 * (IsKeyPressed(KEY_D) - IsKeyPressed(KEY_A));
 
         temp.position.x += xMove;
         temp.position.z += zMove;

@@ -195,7 +195,7 @@ public:
 
 	void updatePhysics(Camera& camera, trackData track)
 	{
-		speed = 0.1 * 1 * (IsKeyDown(KEY_UP) - IsKeyDown(KEY_DOWN));
+		speed = 0.1 * (IsKeyDown(KEY_UP) - IsKeyDown(KEY_DOWN));
 
 		oldAngle = angle;
 
