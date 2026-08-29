@@ -195,53 +195,75 @@ public:
 
 	void updatePhysics(Camera& camera, trackData track)
 	{
-		if (IsKeyPressed(KEY_P) && rpm >=2900.0f)
+		if (IsKeyPressed(KEY_P) && rpm >=2900.0f && gear < 7)//gear up(manual) 
 		{
 			gear++;
 			rpm -= 3000.0f;
-			if (gear > 7)
-				gear = 7;
 		}
-		if (IsKeyPressed(KEY_L))
+		if (IsKeyPressed(KEY_L) && gear > 1)//gear down(manual)
 		{
 			gear--;
 			rpm += 3000.0f;
-			if (gear < 1)
-				gear = 1;
 		}
 
-		if (IsKeyDown(KEY_UP))
+		if (gear == 0 && rpm >= 0.0f)//going from reverse to first gear
+			gear = 1;
+
+		if (IsKeyDown(KEY_UP))//if accelerating
 		{
-			if (rpm > 3000.0f)
+			if (rpm > 3000.0f)//if rpm too high make the acceleration bad(to prevent staying in low gear for the better acceleration)
 				rpm += rpmAccel[8];
-			else
-				rpm += rpmAccel[gear];
+			else//if rpm normal
+			{
+				if (gear == 0)//if pressing forward in reverse gear, apply a quick accel to get fast in 1st gear
+					rpm += rpmAccel[1] * 3;
+				else//if in 1st - 7th gear
+					rpm += rpmAccel[gear];//accelerate depending on the gear(the higher the worst the acceleration)
+			}
 		}
-		else if(rpm > 0.0f)
+		else if (rpm > 0.0f)//if not pressing up, to decelerate
 		{
-			if (rpm > 3000.0f)
+			if (rpm > 3000.0f)//if rpm too high decelerate fast(3* the accel in 1st gear)
 				rpm -= 15.0f;
-			else
+			else//if rpm 0-3000 decelerate slightly quicker than accelerating
 				rpm -= rpmAccel[gear] + 1.0f;
 		}
-		else if (rpm < 0.0f)
+		else if (rpm < 0.0f && !IsKeyDown(KEY_DOWN) && gear > 0)//if rpm is negative try to get it to 0, when not braking(get the car to the minimum speed of the gear)(if gear 0, that means the car will accelerate backwards when not holding down, so we avoid it)
 		{
-			rpm = 0.0f;
+			if (rpm > -rpmAccel[gear])//if rpm close to 0, just make it 0
+				rpm = 0.0f;
+			else//else apply the acceleration of the current gear(faster to gear down and accelerate then staying in the higher gear)
+				rpm += rpmAccel[gear];
 		}
 
-		if (IsKeyDown(KEY_DOWN))
+		if (IsKeyDown(KEY_DOWN))//if braking/accelerating backwards
 		{
-			rpm += rpmAccel[0];
+			if (gear >= 1 && rpm <= (gear - 1) * (-3000.0f))//if in gear higher than 1 with low enough rpm to have negative speed switch to reverse and make the rpm higher
+			{
+				rpm += (gear - 1) * 3000.0f;
+				gear = 0;
+			}
+			if (gear == 0 && rpm > -3000.0f)//if in reverse and slower than 150 backwards speed(-3000 rpm) accelerate backwards
+				rpm += rpmAccel[gear];
+			else if(gear != 0)//if not in reverse and braking, decelerate faster than the backwards acceleration
+				rpm += rpmAccel[0] * 3.0f;
+		}
+		else if (gear == 0)//if not pressing down and in gear 0
+		{
+			if (rpm > rpmAccel[gear])//if close to 0 rpm make it 0
+				rpm = 0.0f;
+			else//else accelerate to 0 rpm
+				rpm -= rpmAccel[gear];
 		}
 
-		if (gear == 7 && rpm >= 2000.0f)
+		if (gear == 7 && rpm >= 2000.0f)//limit the car to 1000 speed (2000 rpm in gear 7)(the car can still go past 1000 in lower gears but the acceleration is very slow, so not really worth it)
 		{
 			rpm = 2000.0f;
 		}
 		
-		displaySpeed = minSpeed[gear] + 150.0f * (rpm / 3000.0f);
+		displaySpeed = minSpeed[gear] + 150.0f * (rpm / 3000.0f);//calculate the display speed in km/h
 
-		speed = displaySpeed / 1440.0f;
+		speed = displaySpeed / 1440.0f;//calculate the speed applied to the car
 
 		oldAngle = angle;
 
