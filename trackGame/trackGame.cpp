@@ -49,14 +49,16 @@ void drawScreen(Camera3D camera, car aCar, trackData track, block temp)
     deb << "Angle: " << aCar.angle.x << " " << aCar.angle.y << " " << aCar.angle.z;
     deb << "\noldAngle: " << aCar.oldAngle.x << " " << aCar.oldAngle.y << " " << aCar.oldAngle.z;
     deb << "\nAngleMovement: " << aCar.angleMovement.x << " " << aCar.angleMovement.y << " " << aCar.angleMovement.z;
-    deb << "\nSpeed: " << aCar.speed;
-    deb << "\nSphere1 center: " << aCar.collisionSpheres[0].center.x << ' ' << aCar.collisionSpheres[0].center.y << ' ' << aCar.collisionSpheres[0].center.z;
-    deb << "\nSphere1 localCenter: " << aCar.collisionSpheres[0].localCenter.x << ' ' << aCar.collisionSpheres[0].localCenter.y << ' ' << aCar.collisionSpheres[0].localCenter.z;
+    deb << "\nposition: " << aCar.position.x << " " << aCar.position.y << " " << aCar.position.z;
     deb << "\nUp: " << aCar.up.x << ' ' << aCar.up.y << ' ' << aCar.up.z;
     deb << "\nright: " << aCar.right.x << ' ' << aCar.right.y << ' ' << aCar.right.z;
     deb << "\nforward: " << aCar.forward.x << ' ' << aCar.forward.y << ' ' << aCar.forward.z;
+    deb << "\n\nSpeed: " << aCar.speed;
+    deb << "\ndisplaySpeed: " << aCar.displaySpeed;
+    deb << "\ngear: " << aCar.gear;
+    deb << "\nrpm: " << aCar.rpm;
 
-    DrawText(deb.str().c_str(), 50, 100, 25, BLACK);
+    DrawText(deb.str().c_str(), 50, 100, 25, DARKGREEN);
     DrawFPS(50, 50);
 
     EndDrawing();
@@ -113,8 +115,8 @@ int main()
 
         aCar.updatePhysics(camera, track);
         
-        int xMove = 10 * (IsKeyPressed(KEY_W) - IsKeyPressed(KEY_S));
-        int zMove = 10 * (IsKeyPressed(KEY_D) - IsKeyPressed(KEY_A));
+        int xMove = 20 * (IsKeyPressed(KEY_W) - IsKeyPressed(KEY_S));
+        int zMove = 20 * (IsKeyPressed(KEY_D) - IsKeyPressed(KEY_A));
 
         temp.position.x += xMove;
         temp.position.z += zMove;

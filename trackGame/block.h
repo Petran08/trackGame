@@ -10,7 +10,7 @@ public:
 	std::string name;
 	int blockID = 0;
 	Model blockModel;
-	double size = 8;//for a normal block
+	double size = 15;//for a normal block
 
 	block(std::string n, Vector3 pos, int rot, int id, Model model)
 	{

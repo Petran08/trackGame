@@ -22,11 +22,11 @@ public:
 	Vector3 targetNormal = Vector3Zero();
 	int bumpFrames = 0;
 	Vector3 angleMovement = Vector3Zero();//for the bump
-	double speed = 0;
+	double speed = 0, displaySpeed = 0;//first is in u/f(units/frame), second is in km/h
 	short int gear = 1;
 	float rpm = 0;
-	float deceleration = 0;
-	float acceleration = 0;
+	float rpmAccel[9] = {-2.0f, 5.0f, 4.0f, 3.0f, 2.0f, 1.0f, 0.4f, 0.2f, 0.02f};//R 1 2 3 4 5 6 7 >3000rpm
+	float minSpeed[8] = { 0.0f, 0.0f, 150.0f, 300.0f, 450.0f, 600.0f, 750.0f, 900.0f };//R 1 2 3 4 5 6 7
 	Model model;
 	std::vector<Sphere> collisionSpheres;
 
@@ -195,7 +195,53 @@ public:
 
 	void updatePhysics(Camera& camera, trackData track)
 	{
-		speed = 0.1 * (IsKeyDown(KEY_UP) - IsKeyDown(KEY_DOWN));
+		if (IsKeyPressed(KEY_P) && rpm >=2900.0f)
+		{
+			gear++;
+			rpm -= 3000.0f;
+			if (gear > 7)
+				gear = 7;
+		}
+		if (IsKeyPressed(KEY_L))
+		{
+			gear--;
+			rpm += 3000.0f;
+			if (gear < 1)
+				gear = 1;
+		}
+
+		if (IsKeyDown(KEY_UP))
+		{
+			if (rpm > 3000.0f)
+				rpm += rpmAccel[8];
+			else
+				rpm += rpmAccel[gear];
+		}
+		else if(rpm > 0.0f)
+		{
+			if (rpm > 3000.0f)
+				rpm -= 15.0f;
+			else
+				rpm -= rpmAccel[gear] + 1.0f;
+		}
+		else if (rpm < 0.0f)
+		{
+			rpm = 0.0f;
+		}
+
+		if (IsKeyDown(KEY_DOWN))
+		{
+			rpm += rpmAccel[0];
+		}
+
+		if (gear == 7 && rpm >= 2000.0f)
+		{
+			rpm = 2000.0f;
+		}
+		
+		displaySpeed = minSpeed[gear] + 150.0f * (rpm / 3000.0f);
+
+		speed = displaySpeed / 1440.0f;
 
 		oldAngle = angle;
 
@@ -214,7 +260,7 @@ public:
 
 		position = Vector3Add(position, Vector3Scale(forward, speed));
 
-		position = Vector3Add(position, { 0.0f, -0.1f, 0.0f });//hard coded gravity for now, will update when organizing the code
+		//position = Vector3Add(position, { 0.0f, -0.1f, 0.0f });//hard coded gravity for now, will update when organizing the code
 
 		if (IsKeyPressed(KEY_SPACE))
 			position = Vector3Add(position, Vector3{ 0.0f, 2.3f, 0.0f });
