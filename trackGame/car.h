@@ -25,7 +25,8 @@ public:
 	double speed = 0, displaySpeed = 0;//first is in u/f(units/frame), second is in km/h
 	short int gear = 1;
 	float rpm = 0;
-	float rpmAccel[9] = {-2.0f, 5.0f, 4.0f, 3.0f, 2.0f, 1.0f, 0.4f, 0.2f, 0.02f};//R 1 2 3 4 5 6 7 >3000rpm
+	bool automatic = false;
+	float rpmAccel[9] = {-2.5f, 6.0f, 4.0f, 3.0f, 2.0f, 1.0f, 0.4f, 0.2f, 0.02f};//R 1 2 3 4 5 6 7 >3000rpm
 	float minSpeed[8] = { 0.0f, 0.0f, 150.0f, 300.0f, 450.0f, 600.0f, 750.0f, 900.0f };//R 1 2 3 4 5 6 7
 	Model model;
 	std::vector<Sphere> collisionSpheres;
@@ -195,15 +196,36 @@ public:
 
 	void updatePhysics(Camera& camera, trackData track)
 	{
-		if (IsKeyPressed(KEY_P) && rpm >=2900.0f && gear < 7)//gear up(manual) 
+		if (IsKeyPressed(KEY_Z))
 		{
-			gear++;
-			rpm -= 3000.0f;
+			automatic = !automatic;
 		}
-		if (IsKeyPressed(KEY_L) && gear > 1)//gear down(manual)
+
+		if(automatic)
 		{
-			gear--;
-			rpm += 3000.0f;
+			if (rpm >= 3000.0f && gear < 7)//gear up(automatic) 
+			{
+				gear++;
+				rpm -= 3000.0f;
+			}
+			if (rpm <= 0.0f && gear > 1)//gear down(automatic)
+			{
+				gear--;
+				rpm += 3000.0f;
+			}
+		}
+		else
+		{
+			if (IsKeyPressed(KEY_P) && rpm >= 2900.0f && gear < 7)//gear up(manual) 
+			{
+				gear++;
+				rpm -= 3000.0f;
+			}
+			if (IsKeyPressed(KEY_L) && gear > 1)//gear down(manual)
+			{
+				gear--;
+				rpm += 3000.0f;
+			}
 		}
 
 		if (gear == 0 && rpm >= 0.0f)//going from reverse to first gear

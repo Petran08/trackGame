@@ -57,6 +57,7 @@ void drawScreen(Camera3D camera, car aCar, trackData track, block temp)
     deb << "\ndisplaySpeed: " << aCar.displaySpeed;
     deb << "\ngear: " << aCar.gear;
     deb << "\nrpm: " << aCar.rpm;
+    deb << "\nautomatic: " << int(aCar.automatic);
 
     DrawText(deb.str().c_str(), 50, 100, 25, DARKGREEN);
     DrawFPS(50, 50);
