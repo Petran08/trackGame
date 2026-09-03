@@ -14,3 +14,12 @@ roadBlockS 40 0 -40 0 1
 roadBlockS 20 0 -40 0 1
 roadBlockS 0 0 -40 0 1
 roadBlockS -20 0 -40 0 1
+roadBlockS 60 0 0 0 1
+roadBlockS 60 0 -20 0 1
+roadBlockS 60 0 -40 0 1
+roadBlockS 60 0 20 0 1
+roadBlockS 60 0 40 0 1
+roadBlockS 40 0 40 0 1
+roadBlockS 20 0 40 0 1
+roadBlockS 0 0 40 0 1
+roadBlockS -20 0 40 0 1
