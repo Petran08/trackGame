@@ -25,6 +25,7 @@ public:
 	double speed = 0, displaySpeed = 0;//first is in u/f(units/frame), second is in km/h
 	short int gear = 1;
 	float rpm = 0;
+	int accelCooldown = 0;//cooldown for accelerating after gear change
 	bool automatic = false;
 	float rpmAccel[9] = {-2.5f, 6.0f, 4.0f, 3.0f, 2.0f, 1.0f, 0.4f, 0.2f, 0.02f};//R 1 2 3 4 5 6 7 >3000rpm
 	float minSpeed[8] = { 0.0f, 0.0f, 150.0f, 300.0f, 450.0f, 600.0f, 750.0f, 900.0f };//R 1 2 3 4 5 6 7
@@ -175,7 +176,7 @@ public:
 				
 				angleMovement.y = 0.0f;
 			}
-			else if (false)//hitting a wall(add distinction between right forward ant their opposites)
+			else if (false)//hitting a wall(add distinction between right forward and their opposites)
 			{
 
 			}
@@ -194,37 +195,41 @@ public:
 		
 	}
 
-	void updatePhysics(Camera& camera, trackData track)
+	void gearUpdate()
 	{
-		if (IsKeyPressed(KEY_Z))
+		if (IsKeyPressed(KEY_Z))//change transmission
 		{
 			automatic = !automatic;
 		}
 
-		if(automatic)
+		if (automatic)
 		{
 			if (rpm >= 3000.0f && gear < 7)//gear up(automatic) 
 			{
 				gear++;
-				rpm -= 3000.0f;
+				rpm -= 2999.999f;
+				accelCooldown = 35;
 			}
 			if (rpm <= 0.0f && gear > 1)//gear down(automatic)
 			{
 				gear--;
 				rpm += 3000.0f;
+				accelCooldown = 35;
 			}
 		}
 		else
 		{
-			if (IsKeyPressed(KEY_P) && rpm >= 2900.0f && gear < 7)//gear up(manual) 
+			if (IsKeyPressed(KEY_P) && rpm >= 2950.0f && gear < 7)//gear up(manual) 
 			{
 				gear++;
 				rpm -= 3000.0f;
+				accelCooldown = 35;
 			}
 			if (IsKeyPressed(KEY_L) && gear > 1)//gear down(manual)
 			{
 				gear--;
 				rpm += 3000.0f;
+				accelCooldown = 35;
 			}
 		}
 
@@ -234,19 +239,24 @@ public:
 		if (IsKeyDown(KEY_UP))//if accelerating
 		{
 			if (rpm > 3000.0f)//if rpm too high make the acceleration bad(to prevent staying in low gear for the better acceleration)
-				rpm += rpmAccel[8];
+				if (accelCooldown == 0)
+					rpm += rpmAccel[8];
+				else
+					accelCooldown--;
 			else//if rpm normal
 			{
 				if (gear == 0)//if pressing forward in reverse gear, apply a quick accel to get fast in 1st gear
 					rpm += rpmAccel[1] * 3;
-				else//if in 1st - 7th gear
+				else if (accelCooldown == 0)//if in 1st - 7th gear, and no accel cooldown
 					rpm += rpmAccel[gear];//accelerate depending on the gear(the higher the worst the acceleration)
+				else if (accelCooldown > 0)
+					accelCooldown--;
 			}
 		}
 		else if (rpm > 0.0f)//if not pressing up, to decelerate
 		{
 			if (rpm > 3000.0f)//if rpm too high decelerate fast(3* the accel in 1st gear)
-				rpm -= 15.0f;
+				rpm -= rpmAccel[1] * 3;
 			else//if rpm 0-3000 decelerate slightly quicker than accelerating
 				rpm -= rpmAccel[gear] + 1.0f;
 		}
@@ -267,8 +277,8 @@ public:
 			}
 			if (gear == 0 && rpm > -3000.0f)//if in reverse and slower than 150 backwards speed(-3000 rpm) accelerate backwards
 				rpm += rpmAccel[gear];
-			else if(gear != 0)//if not in reverse and braking, decelerate faster than the backwards acceleration
-				rpm += rpmAccel[0] * 3.0f;
+			else if (gear != 0)//if not in reverse and braking, decelerate faster than the backwards acceleration
+				rpm += rpmAccel[0] * 2.5f;
 		}
 		else if (gear == 0)//if not pressing down and in gear 0
 		{
@@ -278,10 +288,15 @@ public:
 				rpm -= rpmAccel[gear];
 		}
 
-		if (gear == 7 && rpm >= 2000.0f)//limit the car to 1000 speed (2000 rpm in gear 7)(the car can still go past 1000 in lower gears but the acceleration is very slow, so not really worth it)
+		if (rpm >= (2000.0f + (7 - gear) * 3000.0f))//limit the car to 1000 speed (2000 rpm in gear 7)
 		{
-			rpm = 2000.0f;
+			rpm = (2000.0f + (7 - gear) * 3000.0f);
 		}
+	}
+
+	void updatePhysics(Camera& camera, trackData track)
+	{
+		gearUpdate();
 		
 		displaySpeed = minSpeed[gear] + 150.0f * (rpm / 3000.0f);//calculate the display speed in km/h
 
