@@ -239,18 +239,16 @@ public:
 		if (IsKeyDown(KEY_UP))//if accelerating
 		{
 			if (rpm > 3000.0f)//if rpm too high make the acceleration bad(to prevent staying in low gear for the better acceleration)
+			{
 				if (accelCooldown == 0)
 					rpm += rpmAccel[8];
-				else
-					accelCooldown--;
+			}
 			else//if rpm normal
 			{
 				if (gear == 0)//if pressing forward in reverse gear, apply a quick accel to get fast in 1st gear
 					rpm += rpmAccel[1] * 3;
 				else if (accelCooldown == 0)//if in 1st - 7th gear, and no accel cooldown
 					rpm += rpmAccel[gear];//accelerate depending on the gear(the higher the worst the acceleration)
-				else if (accelCooldown > 0)
-					accelCooldown--;
 			}
 		}
 		else if (rpm > 0.0f)//if not pressing up, to decelerate
@@ -267,6 +265,9 @@ public:
 			else//else apply the acceleration of the current gear(faster to gear down and accelerate then staying in the higher gear)
 				rpm += rpmAccel[gear];
 		}
+
+		if (accelCooldown > 0)
+			accelCooldown--;
 
 		if (IsKeyDown(KEY_DOWN))//if braking/accelerating backwards
 		{
