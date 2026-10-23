@@ -13,22 +13,31 @@ struct Sphere {
 	float radius;
 };
 
+struct Collision {
+	Vector3 avgNormal;//average normal of the collision
+	unsigned int colBlockIds[10];//ids of the blocks that collided with the car
+};
+
 class car
 {
 public:
 	Vector3 position = Vector3{ 0.0f, 3.0f, 0.0f};
 	Vector3 angle = Vector3Zero(), oldAngle = Vector3Zero();
+	float targetAngleY = 0.0f;
 	Vector3 up = { 0.0f, 1.0f, 0.0f }, right = { 0.0f, 0.0f, 1.0f }, forward = {1.0f, 0.0f, 0.0f};
+	
 	Vector3 targetNormal = Vector3Zero();
 	int bumpFrames = 0;
+	Collision collisions[3];//collisions for floor, wall and roof
 	Vector3 angleMovement = Vector3Zero();//for the bump
+	
 	double speed = 0, displaySpeed = 0;//first is in u/f(units/frame), second is in km/h
 	short int gear = 1;
 	float rpm = 0;
 	int accelCooldown = 0;//cooldown for accelerating after gear change
-	bool automatic = false;
-	float rpmAccel[9] = {-2.5f, 6.0f, 4.0f, 3.0f, 2.0f, 1.0f, 0.4f, 0.2f, 0.02f};//R 1 2 3 4 5 6 7 >3000rpm
+	float rpmAccel[8] = {-2.5f, 6.0f, 4.0f, 3.0f, 2.0f, 1.0f, 0.4f, 0.2f};//R 1 2 3 4 5 6 7
 	float minSpeed[8] = { 0.0f, 0.0f, 150.0f, 300.0f, 450.0f, 600.0f, 750.0f, 900.0f };//R 1 2 3 4 5 6 7
+	
 	Model model;
 	std::vector<Sphere> collisionSpheres;
 
@@ -197,40 +206,18 @@ public:
 
 	void gearUpdate()
 	{
-		if (IsKeyPressed(KEY_Z))//change transmission
-		{
-			automatic = !automatic;
-		}
 
-		if (automatic)
+		if (rpm >= 3000.0f)//gear up
 		{
-			if (rpm >= 3000.0f && gear < 7)//gear up(automatic) 
-			{
-				gear++;
-				rpm -= 2999.999f;
-				accelCooldown = 35;
-			}
-			if (rpm <= 0.0f && gear > 1)//gear down(automatic)
-			{
-				gear--;
-				rpm += 3000.0f;
-				accelCooldown = 35;
-			}
+			gear++;
+			rpm -= 2999.999f;
+			accelCooldown = 35;
 		}
-		else
+		if (rpm <= 0.0f && gear > 1)//gear down
 		{
-			if (IsKeyPressed(KEY_P) && rpm >= 2950.0f && gear < 7)//gear up(manual) 
-			{
-				gear++;
-				rpm -= 3000.0f;
-				accelCooldown = 35;
-			}
-			if (IsKeyPressed(KEY_L) && gear > 1)//gear down(manual)
-			{
-				gear--;
-				rpm += 3000.0f;
-				accelCooldown = 35;
-			}
+			gear--;
+			rpm += 3000.0f;
+			accelCooldown = 35;
 		}
 
 		if (gear == 0 && rpm >= 0.0f)//going from reverse to first gear
@@ -238,25 +225,14 @@ public:
 
 		if (IsKeyDown(KEY_UP))//if accelerating
 		{
-			if (rpm > 3000.0f)//if rpm too high make the acceleration bad(to prevent staying in low gear for the better acceleration)
-			{
-				if (accelCooldown == 0)
-					rpm += rpmAccel[8];
-			}
-			else//if rpm normal
-			{
-				if (gear == 0)//if pressing forward in reverse gear, apply a quick accel to get fast in 1st gear
-					rpm += rpmAccel[1] * 3;
-				else if (accelCooldown == 0)//if in 1st - 7th gear, and no accel cooldown
-					rpm += rpmAccel[gear];//accelerate depending on the gear(the higher the worst the acceleration)
-			}
+			if (gear == 0)//if pressing forward in reverse gear, apply a quick accel to get fast in 1st gear
+				rpm += rpmAccel[1] * 3;
+			else if (accelCooldown == 0)//if in 1st - 7th gear, and no accel cooldown
+				rpm += rpmAccel[gear];//accelerate depending on the gear(the higher the worst the acceleration)
 		}
 		else if (rpm > 0.0f)//if not pressing up, to decelerate
 		{
-			if (rpm > 3000.0f)//if rpm too high decelerate fast(3* the accel in 1st gear)
-				rpm -= rpmAccel[1] * 3;
-			else//if rpm 0-3000 decelerate slightly quicker than accelerating
-				rpm -= rpmAccel[gear] + 1.0f;
+			rpm -= rpmAccel[gear] + 1.0f;//decelerate slightly quicker than accelerating
 		}
 		else if (rpm < 0.0f && !IsKeyDown(KEY_DOWN) && gear > 0)//if rpm is negative try to get it to 0, when not braking(get the car to the minimum speed of the gear)(if gear 0, that means the car will accelerate backwards when not holding down, so we avoid it)
 		{
@@ -271,9 +247,8 @@ public:
 
 		if (IsKeyDown(KEY_DOWN))//if braking/accelerating backwards
 		{
-			if (gear >= 1 && rpm <= (gear - 1) * (-3000.0f))//if in gear higher than 1 with low enough rpm to have negative speed switch to reverse and make the rpm higher
+			if (gear == 1 && rpm <= 0)//if in gear 1 with negative rpm switch to reverse
 			{
-				rpm += (gear - 1) * 3000.0f;
 				gear = 0;
 			}
 			if (gear == 0 && rpm > -3000.0f)//if in reverse and slower than 150 backwards speed(-3000 rpm) accelerate backwards
@@ -289,9 +264,18 @@ public:
 				rpm -= rpmAccel[gear];
 		}
 
-		if (rpm >= (2000.0f + (7 - gear) * 3000.0f))//limit the car to 1000 speed (2000 rpm in gear 7)
+		if (rpm >= 2000.0f && gear == 7)//limit the car to 1000 speed (2000 rpm in gear 7)
 		{
-			rpm = (2000.0f + (7 - gear) * 3000.0f);
+			rpm = 2000.0f;
+		}
+
+		if (rpm > 4000)//if rpm too high, make it lower
+		{
+			rpm -= (rpm - 4000) * 0.08f;
+		}
+		if (rpm < -500 && gear > 0)//if rpm too low, make it higher
+		{
+			rpm -= (rpm + 500) * 0.4f;
 		}
 	}
 
@@ -304,13 +288,15 @@ public:
 		speed = displaySpeed / 1440.0f;//calculate the speed applied to the car
 
 		oldAngle = angle;
+		
+		angle.y += (targetAngleY - angle.y) * 1.0f;//road grip, will add other surfaces later, with different grip values
 
 		if (speed == 0)
 			speed = 1e-10;
 
 		if (speed != 1e-10)
 		{
-			angle.y += speed / abs(speed) * DEG2RAD * 0.5 * (-IsKeyDown(KEY_RIGHT) + IsKeyDown(KEY_LEFT));
+			targetAngleY += speed / abs(speed) * DEG2RAD * 0.5 * (-IsKeyDown(KEY_RIGHT) + IsKeyDown(KEY_LEFT));
 		}
 		else
 		{

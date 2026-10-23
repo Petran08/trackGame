@@ -12,6 +12,101 @@ std::string blockTypes[] = { "roadBlock", "roadBlockS"};
 
 Model blockModels[10];
 
+float circleAngle = 90;
+
+Vector2 elPos = Vector2Zero();
+Vector2 rec1P = Vector2{ 20, 113 }, rec1P2 = Vector2{ 20, 113 };
+Vector2 rec2P = Vector2{ 335, 62 }, rec2P2 = Vector2{ 335, 62 };
+Vector2 qcircP = Vector2{ 335, 111 };
+Vector2 ind = Vector2{ 1450, 820 };
+
+Color rec1c1 = BLACK, rec1c2 = BLACK, rec2c1 = BLACK, rec2c2 = BLACK, qcircc = BLACK;
+
+float displayRpm = 1000;
+
+float scale = 0.4f;
+
+Texture2D quarterCircle, indicator, rec1, rec2;
+Texture2D outline, inlineT;
+
+void updateRpmInd()
+{
+    if (displayRpm <= 1750)
+    {
+        rec1c1 = GREEN;
+        if (displayRpm < 1199)
+            rec1c1 = YELLOW;
+        rec1c2 = BLACK;
+        rec2c1 = BLACK;
+        rec2c2 = BLACK;
+        qcircc = BLACK;
+        rec1P2 = rec1P + Vector2{ ((displayRpm - 500) / 1250) * rec1.width * scale, 0.0f };
+
+    }
+    if (displayRpm >= 1750 && displayRpm <= 3000)
+    {
+        rec1c1 = GREEN;
+        rec1c2 = GREEN;
+        rec2c1 = BLACK;
+        rec2c2 = BLACK;
+        qcircc = BLACK;
+        rec1P2 = rec1P + Vector2{ ((displayRpm - 1750) / 1250) * rec1.width * scale, 0.0f };
+    }
+    if (displayRpm >= 3000 && displayRpm <= 3500)
+    {
+        rec1c1 = GREEN;
+        rec1c2 = GREEN;
+        rec2c1 = BLACK;
+        rec2c2 = BLACK;
+        qcircc = GREEN;
+        circleAngle = ((3500 - displayRpm) / 500) * 90;
+        rec1P2 = rec1P + Vector2{ rec1.width * scale, 0.0f };
+    }
+    if (displayRpm >= 3500 && displayRpm <= 4250)
+    {
+        rec1c1 = GREEN;
+        rec1c2 = GREEN;
+        rec2c1 = GREEN;
+        rec2c2 = BLACK;
+        qcircc = GREEN;
+        if (displayRpm > 3900)
+        {
+            rec1c1 = RED;
+            rec1c2 = RED;
+            rec2c1 = RED;
+            rec2c2 = BLACK;
+            qcircc = RED;
+        }
+        rec2P2 = rec2P - Vector2{ 0.0f, ((displayRpm - 3500) / 750) * rec2.height * scale };
+        rec1P2 = rec1P + Vector2{ rec1.width * scale, 0.0f };
+        circleAngle = 0.0f;
+
+    }
+    if (displayRpm >= 4250)
+    {
+        rec1c1 = RED;
+        rec1c2 = RED;
+        rec2c1 = RED;
+        rec2c2 = RED;
+        qcircc = RED;
+        rec2P2 = rec2P - Vector2{ 0.0f, ((displayRpm - 4250) / 750) * rec2.height * scale };
+        rec1P2 = rec1P + Vector2{ rec1.width * scale, 0.0f };
+        circleAngle = 0.0f;
+    }
+}
+
+void drawRpmDisplay()
+{
+    DrawTextureEx(inlineT, ind, 0.0f, scale, WHITE);
+    DrawTextureEx(quarterCircle, qcircP + ind, circleAngle, scale, qcircc);
+    DrawTextureEx(rec1, rec1P + ind, 0.0f, scale, rec1c1);
+    DrawTextureEx(rec1, rec1P2 + ind, 0.0f, scale, rec1c2);
+    DrawTextureEx(rec2, rec2P + ind, 0.0f, scale, rec2c1);
+    DrawTextureEx(rec2, rec2P2 + ind, 0.0f, scale, rec2c2);
+    DrawTextureEx(outline, ind, 0.0f, scale, WHITE);
+    DrawTextureEx(indicator, ind, 0.0f, scale, WHITE);
+}
+
 void drawScreen(Camera3D camera, car aCar, trackData track, block temp)
 {
     stringstream deb;
@@ -57,10 +152,27 @@ void drawScreen(Camera3D camera, car aCar, trackData track, block temp)
     deb << "\ndisplaySpeed: " << aCar.displaySpeed;
     deb << "\ngear: " << aCar.gear;
     deb << "\nrpm: " << aCar.rpm;
-    deb << "\nautomatic: " << int(aCar.automatic);
 
     DrawText(deb.str().c_str(), 50, 100, 25, DARKGREEN);
     DrawFPS(50, 50);
+
+    float targetRpm = 0.0f;
+
+    if (aCar.gear > 0)
+        targetRpm = aCar.rpm + 1000;
+    else if(aCar.gear == 0)
+        targetRpm = abs(aCar.rpm) + 1000;
+
+    if (targetRpm < 500)
+        targetRpm = 500;
+    if (targetRpm > 5000)
+        targetRpm = 5000;
+
+    displayRpm += (targetRpm - displayRpm) * 0.1f;
+
+    updateRpmInd();
+
+    drawRpmDisplay();
 
     EndDrawing();
 }
@@ -97,6 +209,11 @@ int main()
 
 
     aCar.model = LoadModel("carModelB.glb");
+
+
+    quarterCircle = LoadTexture("quarterCircle.png"), indicator = LoadTexture("rpm indicator.png"), rec1 = LoadTexture("rectangle1.png"), rec2 = LoadTexture("rectangle2.png");
+    outline = LoadTexture("rpm indicator outline.png"), inlineT = LoadTexture("rpm indicator inline.png");
+
 
     std::string trackName = "01.trk";
 
