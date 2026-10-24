@@ -113,6 +113,54 @@ void drawRpmDisplay()
     DrawTextureEx(indicator, ind, 0.0f, scale, WHITE);
 }
 
+void drawSpeedGear(car aCar)
+{
+    stringstream gear;
+    gear << aCar.gear;
+
+    if (aCar.gear == 0)
+    {
+        DrawTextEx(russo, "R", Vector2{ 304, 34 } + ind, 60, 1, rec1c1);
+    }
+    else if (aCar.gear == 1)
+    {
+        DrawTextEx(russo, gear.str().c_str(), Vector2{ 311, 34 } + ind, 60, 1, rec1c1);
+    }
+    else if (aCar.gear == 4)
+    {
+        DrawTextEx(russo, gear.str().c_str(), Vector2{ 304, 34 } + ind, 60, 1, rec1c1);
+    }
+    else if (aCar.gear == 6)
+    {
+        DrawTextEx(russo, gear.str().c_str(), Vector2{ 306, 34 } + ind, 60, 1, rec1c1);
+    }
+    else
+    {
+        DrawTextEx(russo, gear.str().c_str(), Vector2{ 308, 34 } + ind, 60, 1, rec1c1);
+    }
+
+    int drawSpeed = int(abs(aCar.displaySpeed));
+
+    stringstream sp;
+
+    if (drawSpeed < 10)
+    {
+        sp << "00" << drawSpeed;
+    }
+    else if (drawSpeed < 100)
+    {
+        sp << "0" << drawSpeed;
+    }
+    else
+    {
+        sp << drawSpeed;
+    }
+    if (drawSpeed < 1000)
+        DrawTextEx(jadrien, sp.str().c_str(), Vector2{ 73, 12 } + ind, 110, 1, WHITE);
+    else
+        DrawTextEx(jadrien, sp.str().c_str(), Vector2{ 73, 12 } + ind - Vector2{ 49, 0 }, 110, 1, WHITE);
+}
+
 void drawScreen(Camera3D camera, car aCar, trackData track, block temp)
 {
     stringstream deb;
@@ -180,50 +228,7 @@ void drawScreen(Camera3D camera, car aCar, trackData track, block temp)
 
     drawRpmDisplay();
 
-    stringstream gear;
-    gear << aCar.gear;
-
-    if (aCar.gear == 0)
-    {
-        DrawTextEx(russo, "R", Vector2{ 304, 34 } + ind, 60, 1, rec1c1);
-    }
-    else if (aCar.gear == 1)
-    {
-        DrawTextEx(russo, gear.str().c_str(), Vector2{311, 34} + ind, 60, 1, rec1c1);
-    }
-    else if (aCar.gear == 4)
-    {
-        DrawTextEx(russo, gear.str().c_str(), Vector2{ 304, 34 } + ind, 60, 1, rec1c1);
-    }
-    else if (aCar.gear == 6)
-    {
-        DrawTextEx(russo, gear.str().c_str(), Vector2{ 306, 34 } + ind, 60, 1, rec1c1);
-    }
-    else
-    {
-        DrawTextEx(russo, gear.str().c_str(), Vector2{ 308, 34 } + ind, 60, 1, rec1c1);
-    }
-
-    int drawSpeed = int(abs(aCar.displaySpeed));
-
-    stringstream sp;
-
-    if (drawSpeed < 10)
-    {
-        sp << "00" << drawSpeed;
-    }
-    else if (drawSpeed < 100)
-    {
-        sp << "0" << drawSpeed;
-    }
-    else
-    {
-        sp << drawSpeed;
-    }
-    if (drawSpeed < 1000)
-        DrawTextEx(jadrien, sp.str().c_str(), Vector2{ 73, 12 } + ind, 110, 1, WHITE);
-    else
-        DrawTextEx(jadrien, sp.str().c_str(), Vector2{ 73, 12 } + ind - Vector2{ 49, 0 }, 110, 1, WHITE);
+    drawSpeedGear(aCar);
 
     EndDrawing();
 }
