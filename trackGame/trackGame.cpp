@@ -14,7 +14,6 @@ Model blockModels[10];
 
 float circleAngle = 90;
 
-Vector2 elPos = Vector2Zero();
 Vector2 rec1P = Vector2{ 20, 113 }, rec1P2 = Vector2{ 20, 113 };
 Vector2 rec2P = Vector2{ 335, 62 }, rec2P2 = Vector2{ 335, 62 };
 Vector2 qcircP = Vector2{ 335, 111 };
@@ -29,12 +28,14 @@ float scale = 0.4f;
 Texture2D quarterCircle, indicator, rec1, rec2;
 Texture2D outline, inlineT;
 
-void updateRpmInd()
+Font russo, jadrien;
+
+void updateRpmInd(int gear)
 {
     if (displayRpm <= 1750)
     {
         rec1c1 = GREEN;
-        if (displayRpm < 1199)
+        if (displayRpm < 1250)
             rec1c1 = YELLOW;
         rec1c2 = BLACK;
         rec2c1 = BLACK;
@@ -47,6 +48,11 @@ void updateRpmInd()
     {
         rec1c1 = GREEN;
         rec1c2 = GREEN;
+        if ((displayRpm > 2900 && gear == 7))
+        {
+            rec1c1 = RED;
+            rec1c2 = RED;
+        }
         rec2c1 = BLACK;
         rec2c2 = BLACK;
         qcircc = BLACK;
@@ -69,7 +75,7 @@ void updateRpmInd()
         rec2c1 = GREEN;
         rec2c2 = BLACK;
         qcircc = GREEN;
-        if (displayRpm > 3900)
+        if (displayRpm > 3850)
         {
             rec1c1 = RED;
             rec1c2 = RED;
@@ -103,7 +109,7 @@ void drawRpmDisplay()
     DrawTextureEx(rec1, rec1P2 + ind, 0.0f, scale, rec1c2);
     DrawTextureEx(rec2, rec2P + ind, 0.0f, scale, rec2c1);
     DrawTextureEx(rec2, rec2P2 + ind, 0.0f, scale, rec2c2);
-    DrawTextureEx(outline, ind, 0.0f, scale, WHITE);
+    DrawTextureEx(outline, ind, 0.0f, scale, rec1c1);
     DrawTextureEx(indicator, ind, 0.0f, scale, WHITE);
 }
 
@@ -170,9 +176,54 @@ void drawScreen(Camera3D camera, car aCar, trackData track, block temp)
 
     displayRpm += (targetRpm - displayRpm) * 0.1f;
 
-    updateRpmInd();
+    updateRpmInd(aCar.gear);
 
     drawRpmDisplay();
+
+    stringstream gear;
+    gear << aCar.gear;
+
+    if (aCar.gear == 0)
+    {
+        DrawTextEx(russo, "R", Vector2{ 304, 34 } + ind, 60, 1, rec1c1);
+    }
+    else if (aCar.gear == 1)
+    {
+        DrawTextEx(russo, gear.str().c_str(), Vector2{311, 34} + ind, 60, 1, rec1c1);
+    }
+    else if (aCar.gear == 4)
+    {
+        DrawTextEx(russo, gear.str().c_str(), Vector2{ 304, 34 } + ind, 60, 1, rec1c1);
+    }
+    else if (aCar.gear == 6)
+    {
+        DrawTextEx(russo, gear.str().c_str(), Vector2{ 306, 34 } + ind, 60, 1, rec1c1);
+    }
+    else
+    {
+        DrawTextEx(russo, gear.str().c_str(), Vector2{ 308, 34 } + ind, 60, 1, rec1c1);
+    }
+
+    int drawSpeed = int(abs(aCar.displaySpeed));
+
+    stringstream sp;
+
+    if (drawSpeed < 10)
+    {
+        sp << "00" << drawSpeed;
+    }
+    else if (drawSpeed < 100)
+    {
+        sp << "0" << drawSpeed;
+    }
+    else
+    {
+        sp << drawSpeed;
+    }
+    if (drawSpeed < 1000)
+        DrawTextEx(jadrien, sp.str().c_str(), Vector2{ 73, 12 } + ind, 110, 1, WHITE);
+    else
+        DrawTextEx(jadrien, sp.str().c_str(), Vector2{ 73, 12 } + ind - Vector2{ 49, 0 }, 110, 1, WHITE);
 
     EndDrawing();
 }
@@ -210,6 +261,8 @@ int main()
 
     aCar.model = LoadModel("carModelB.glb");
 
+    russo = LoadFont("RussoOne-Regular.ttf");
+    jadrien = LoadFont("JadrienDemo-vVZy.ttf");
 
     quarterCircle = LoadTexture("quarterCircle.png"), indicator = LoadTexture("rpm indicator.png"), rec1 = LoadTexture("rectangle1.png"), rec2 = LoadTexture("rectangle2.png");
     outline = LoadTexture("rpm indicator outline.png"), inlineT = LoadTexture("rpm indicator inline.png");
@@ -250,3 +303,4 @@ int main()
 
     track.saveTrackFile(trackName);
 }
+
