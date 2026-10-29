@@ -8,6 +8,12 @@
 #include "trackData.h"
 #include <vector>
 
+enum class state {
+	MENU,
+	TRACK_EDIT,
+	TRACK
+};
+
 struct Sphere {
 	Vector3 center = Vector3Zero(), localCenter;
 	float radius;
@@ -16,6 +22,7 @@ struct Sphere {
 struct Collision {
 	Vector3 avgNormal;//average normal of the collision
 	unsigned int colBlockIds[10];//ids of the blocks that collided with the car
+	short int type = 0;//collision type(0-no coll, 1-floor, 2-forward wall, 3-right wall, 4-back wall, 5-left wall, 6-ceiling)
 };
 
 class car
@@ -98,14 +105,15 @@ public:
 		right = Vector3RotateByAxisAngle(right, forward, angle.x - oldAngle.x);
 	}
 	
-	bool collisionCheck(trackData track, short int sphereId, Vector3& normal, float& pushDist)
+	bool collisionCheck(trackData track, short int sphereId, Vector3& normal, float& pushDist, int& blockId)
 	{
 		bool collided = false;
 		float dist = 10000.0f, pushDistT;
 		Vector3 normalT = up;
 		Sphere sp = collisionSpheres[sphereId];
-		for (auto b : track.blocks)
+		for (int i = 0; i < track.blocks.size(); i++)
 		{
+			block b = track.blocks[i];
 			if (Vector3DistanceSqr(sp.center, b.position) <= (b.size + 0.5) * (b.size + 0.5))
 			{
 				float distToBlock = Vector3DistanceSqr(position, b.position);
@@ -122,10 +130,11 @@ public:
 						dist = distToBlock;
 						normal = normalT;
 						pushDist = pushDistT;
+						blockId = i;
 					}
 					//std::cout << "wheel " << sphereId << " hit with block at : " << b.position.x << ' ' << b.position.y << ' ' << b.position.z << '\n';
 					//std::cout << "normal: " << normal.x << ' ' << normal.y << ' ' << normal.z << '\n';
-				} 
+				}
 			}
 		}
 		return collided;
@@ -136,12 +145,12 @@ public:
 		Vector3 normal = up, averageNormal = Vector3Zero();
 		float spheresTouch = 0;
 		float maxPushDist = 0;
-		//improve the block loading and storing(use a 3d vector and simplify the block class if possible)
 
 		for (int i = 0; i < collisionSpheres.size(); i++)
 		{
 			float pushDist;
-			if (collisionCheck(track, i, normal, pushDist))
+			int blcId;
+			if (collisionCheck(track, i, normal, pushDist, blcId))
 			{
 				averageNormal = Vector3Add(averageNormal, normal);
 				spheresTouch++;
@@ -171,13 +180,13 @@ public:
 
 			if (true)//hitting a floor
 			{
-				Vector3 forwardProjection = ProjectVectorOntoPlane(targetNormal, right);
+				Vector3 forwardProjection = ProjectVectorOntoPlane(targetNormal, right);//project target normal on forward-up plane and calculate the angle needed for movement
 
 				angleMovement.z = (SignedAngle(up, forwardProjection, right)) / 16.0f;
 
 				angleMovement.z *= -1;
 
-				Vector3 rightProjection = ProjectVectorOntoPlane(targetNormal, forward);
+				Vector3 rightProjection = ProjectVectorOntoPlane(targetNormal, forward);//project target normal on right-up plane and calculate the angle needed for movement
 
 				angleMovement.x = (SignedAngle(up, rightProjection, forward)) / 16.0f;
 
@@ -279,7 +288,7 @@ public:
 		}
 	}
 
-	void updatePhysics(Camera& camera, trackData track)
+	void updatePhysics(Camera& camera, trackData track, state currentState)
 	{
 		gearUpdate();
 		
@@ -306,7 +315,7 @@ public:
 
 		position = Vector3Add(position, Vector3Scale(forward, speed));
 
-		//position = Vector3Add(position, { 0.0f, -0.1f, 0.0f });//hard coded gravity for now, will update when organizing the code
+		position = Vector3Add(position, { 0.0f, -0.1f, 0.0f });//hard coded gravity for now, will update when organizing the code
 
 		if (IsKeyPressed(KEY_SPACE))
 			position = Vector3Add(position, Vector3{ 0.0f, 2.3f, 0.0f });
@@ -318,7 +327,10 @@ public:
 		updateCollisionSpheresPos();
 
 		camera.target = position;
-		camera.position = Vector3Add(position, Vector3Add(Vector3Scale(forward, -10), Vector3Scale(up, 7.5)));
+		if (currentState == state::TRACK)
+			camera.position = Vector3Add(position, Vector3Add(Vector3Scale(forward, -10), Vector3Scale(up, 7.5)));
+		else if (currentState == state::TRACK_EDIT)
+			camera.position = Vector3Add(position, Vector3Add(Vector3Scale(forward, -100), Vector3Scale(up, 75)));
 		camera.up = up;
 	}
 };

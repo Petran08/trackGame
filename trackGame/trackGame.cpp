@@ -5,8 +5,14 @@
 #include "car.h"
 #include "trackData.h"
 #include "block.h"
+#include "menu.h"
 
 using namespace std;
+
+menu MainMenu, TrackSelectMenu, TrackEditMenu;
+menu currentMenu, prevMenu;
+
+state currentState = state::MENU;
 
 std::string blockTypes[] = { "roadBlock", "roadBlockS"};
 
@@ -32,6 +38,7 @@ Font russo, jadrien;
 
 void updateRpmInd(int gear)
 {
+    //calculate the colors and positions of the lines depending on rpm and gear
     if (displayRpm <= 1750)
     {
         rec1c1 = GREEN;
@@ -103,6 +110,7 @@ void updateRpmInd(int gear)
 
 void drawRpmDisplay()
 {
+    //draw the rpm indicator
     DrawTextureEx(inlineT, ind, 0.0f, scale, WHITE);
     DrawTextureEx(quarterCircle, qcircP + ind, circleAngle, scale, qcircc);
     DrawTextureEx(rec1, rec1P + ind, 0.0f, scale, rec1c1);
@@ -116,8 +124,9 @@ void drawRpmDisplay()
 void drawSpeedGear(car aCar)
 {
     stringstream gear;
-    gear << aCar.gear;
+    gear << aCar.gear;//make the gear a string
 
+    //draw the gear in the correct position depending on its value
     if (aCar.gear == 0)
     {
         DrawTextEx(russo, "R", Vector2{ 304, 34 } + ind, 60, 1, rec1c1);
@@ -139,10 +148,11 @@ void drawSpeedGear(car aCar)
         DrawTextEx(russo, gear.str().c_str(), Vector2{ 308, 34 } + ind, 60, 1, rec1c1);
     }
 
-    int drawSpeed = int(abs(aCar.displaySpeed));
+    int drawSpeed = int(abs(aCar.displaySpeed));//make the speed an integer
 
     stringstream sp;
 
+    //put the correct number of 0's in front of the speed
     if (drawSpeed < 10)
     {
         sp << "00" << drawSpeed;
@@ -155,6 +165,8 @@ void drawSpeedGear(car aCar)
     {
         sp << drawSpeed;
     }
+
+    //draw the speed
     if (drawSpeed < 1000)
         DrawTextEx(jadrien, sp.str().c_str(), Vector2{ 73, 12 } + ind, 110, 1, WHITE);
     else
@@ -186,7 +198,10 @@ void drawScreen(Camera3D camera, car aCar, trackData track, block temp)
     
     DrawModel(aCar.model, aCar.position, 1.0f, WHITE);
 
-    DrawModel(blockModels[temp.blockID], Vector3Add(temp.position, Vector3{ 0.0f, 0.01f, 0.0f }), 1.0f, Color{ 255, 255, 255, 100 });
+    if(currentState == state::TRACK_EDIT)
+    {
+        DrawModel(blockModels[temp.blockID], Vector3Add(temp.position, Vector3{ 0.0f, 0.01f, 0.0f }), 1.0f, Color{ 255, 255, 255, 100 });
+    }
 
     for (auto b : track.blocks)
     {
@@ -213,24 +228,76 @@ void drawScreen(Camera3D camera, car aCar, trackData track, block temp)
     float targetRpm = 0.0f;
 
     if (aCar.gear > 0)
-        targetRpm = aCar.rpm + 1000;
+        targetRpm = aCar.rpm + 1000;//make target rpm be 1000 bigger than the car rpm
     else if(aCar.gear == 0)
-        targetRpm = abs(aCar.rpm) + 1000;
+        targetRpm = abs(aCar.rpm) + 1000;//make target rpm be positive in reverse
 
-    if (targetRpm < 500)
+    if (targetRpm < 500)//make target rpm be in 500-5000 range
         targetRpm = 500;
     if (targetRpm > 5000)
         targetRpm = 5000;
 
-    displayRpm += (targetRpm - displayRpm) * 0.1f;
+    displayRpm += (targetRpm - displayRpm) * 0.1f;//make displayRpm follow target rpm smoothly
 
-    updateRpmInd(aCar.gear);
+    updateRpmInd(aCar.gear);//update rpm indicator colors and line lengths
 
-    drawRpmDisplay();
+    drawRpmDisplay();//draw all of the rpm indicator
 
-    drawSpeedGear(aCar);
+    drawSpeedGear(aCar);//draw the speed ang gear on the rpm display
 
     EndDrawing();
+}
+
+void loadMenus()
+{
+    MainMenu.background = LoadTexture("M_menu_placeholder.png");
+
+    button temp;
+
+    temp.position = Vector2{ 200, 200 };
+    temp.topLeftCorner = temp.position;
+    temp.bottomRightCorner = temp.position + Vector2{ 300, 100 };
+    temp.buttonTexture = LoadTexture("play_placeholder.png");
+    temp.action = "openMenu";
+    temp.menuToOpen = &TrackSelectMenu;
+    temp.trackName = "01.trk";
+
+    MainMenu.menuButtons.push_back(temp);
+
+    temp.position = Vector2{ 200, 400 };
+    temp.topLeftCorner = temp.position;
+    temp.bottomRightCorner = temp.position + Vector2{ 300, 100 };
+    temp.buttonTexture = LoadTexture("edit_placeholder.png");
+    temp.action = "openMenu";
+    temp.menuToOpen = &TrackEditMenu;
+    temp.trackName = "01.trk";
+
+    MainMenu.menuButtons.push_back(temp);
+
+    TrackSelectMenu.background = LoadTexture("T_S_M_placeholdet.png");
+
+    temp.position = Vector2{ 200, 200 };
+    temp.topLeftCorner = temp.position;
+    temp.bottomRightCorner = temp.position + Vector2{ 300, 100 };
+    temp.buttonTexture = LoadTexture("Trk_01_placeholder.png");
+    temp.action = "playTrack";
+    temp.menuToOpen = nullptr;
+    temp.trackName = "01.trk";
+
+    TrackSelectMenu.menuButtons.push_back(temp);
+
+    TrackEditMenu.background = LoadTexture("M_menu_placeholder.png");
+
+    temp.position = Vector2{ 200, 200 };
+    temp.topLeftCorner = temp.position;
+    temp.bottomRightCorner = temp.position + Vector2{ 300, 100 };
+    temp.buttonTexture = LoadTexture("Trk_01_placeholder.png");
+    temp.action = "editTrack";
+    temp.menuToOpen = nullptr;
+    temp.trackName = "01.trk";
+
+    TrackEditMenu.menuButtons.push_back(temp);
+
 }
 
 int main()
@@ -248,6 +315,8 @@ int main()
     //SetTargetFPS(5);
     SetWindowPosition(0, 0);
     ToggleFullscreen();
+
+    SetExitKey(KEY_GRAVE);
 
     Camera3D camera;
     camera.position = Vector3{ 10, 10, 10 };
@@ -272,11 +341,15 @@ int main()
     quarterCircle = LoadTexture("quarterCircle.png"), indicator = LoadTexture("rpm indicator.png"), rec1 = LoadTexture("rectangle1.png"), rec2 = LoadTexture("rectangle2.png");
     outline = LoadTexture("rpm indicator outline.png"), inlineT = LoadTexture("rpm indicator inline.png");
 
+    loadMenus();
+
+    currentMenu = MainMenu;
+    prevMenu = currentMenu;
 
     std::string trackName = "01.trk";
 
     trackData track;
-    track.readTrackFile(trackName, blockModels);
+    // track.readTrackFile(trackName, blockModels);
 
     int blockId = 1;
 
@@ -288,24 +361,85 @@ int main()
         {
             ToggleFullscreen();
         }
-
-        aCar.updatePhysics(camera, track);
         
-        int xMove = 20 * (IsKeyPressed(KEY_W) - IsKeyPressed(KEY_S));
-        int zMove = 20 * (IsKeyPressed(KEY_D) - IsKeyPressed(KEY_A));
-
-        temp.position.x += xMove;
-        temp.position.z += zMove;
-
-        if (IsKeyPressed(KEY_ENTER))
+        if (currentState == state::MENU)
         {
-            track.blocks.push_back(temp);
+            std::string act, trkName;
+            menu toOpn;
+
+            BeginDrawing();
+            
+            currentMenu.drawMenu();
+            
+            EndDrawing();
+
+            if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+            {
+                if (currentMenu.updateButtonHit(GetMousePosition(), act, toOpn, trkName))
+                {
+                    std::cout << "1\n";
+
+                    if (act == "openMenu")
+                    {
+                        prevMenu = currentMenu;
+                        currentMenu = toOpn;
+                    }
+                    else if (act == "playTrack")
+                    {
+                        currentState = state::TRACK;
+                        track.readTrackFile(trkName, blockModels);
+                    }
+                    else if (act == "editTrack")
+                    {
+                        currentState = state::TRACK_EDIT;
+                        track.readTrackFile(trkName, blockModels);
+                        trackName = trkName;
+                    }
+                }
+            }
+            if (IsKeyPressed(KEY_ESCAPE))
+            {
+                currentMenu = prevMenu;
+            }
         }
 
-        drawScreen(camera, aCar, track, temp);
+        if(currentState == state::TRACK_EDIT)
+        {
+            if (IsKeyPressed(KEY_ESCAPE))
+            {
+                currentState = state::MENU;
+                currentMenu = TrackEditMenu;
+                track.saveTrackFile(trackName);
+            }
+
+            int xMove = 20 * (IsKeyPressed(KEY_W) - IsKeyPressed(KEY_S));
+            int zMove = 20 * (IsKeyPressed(KEY_D) - IsKeyPressed(KEY_A));
+
+            temp.position.x += xMove;
+            temp.position.z += zMove;
+
+            if (IsKeyPressed(KEY_ENTER))
+            {
+                track.blocks.push_back(temp);
+            }
+
+            aCar.updatePhysics(camera, track, currentState);
+            drawScreen(camera, aCar, track, temp);
+        }
+
+        if(currentState == state::TRACK)
+        {
+            if (IsKeyPressed(KEY_ESCAPE))
+            {
+                currentState = state::MENU;
+                currentMenu = TrackSelectMenu;
+            }
+
+            aCar.updatePhysics(camera, track, currentState);
+            drawScreen(camera, aCar, track, temp);
+        }
 
     }
 
-    track.saveTrackFile(trackName);
 }
 

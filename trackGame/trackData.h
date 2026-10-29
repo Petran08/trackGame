@@ -11,6 +11,7 @@ public:
 
 	void readTrackFile(std::string fileName, Model modelList[10])
 	{
+		blocks.clear();
 		std::string nm;
 		int rot, id;
 		float x, y, z;
